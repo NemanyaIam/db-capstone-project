@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jul 07, 2024 at 04:08 PM
+-- Generation Time: Jul 07, 2024 at 04:50 PM
 -- Server version: 8.3.0
 -- PHP Version: 8.2.18
 
@@ -25,9 +25,60 @@ DELIMITER $$
 --
 -- Procedures
 --
-DROP PROCEDURE IF EXISTS `CancelOrder`$$
-CREATE DEFINER=`meta`@`%` PROCEDURE `CancelOrder` (IN `order_id` INT)   BEGIN
-    DELETE FROM orders WHERE orders_id = order_id;
+DROP PROCEDURE IF EXISTS `AddValidBooking`$$
+CREATE DEFINER=`meta`@`%` PROCEDURE `AddValidBooking` (IN `booking_date` DATE, IN `table_number` INT, IN `customer_id` INT)   BEGIN
+    DECLARE table_status VARCHAR(50);
+
+    -- Start a transaction
+    START TRANSACTION;
+
+    -- Check if the table is already booked on the given date
+    SELECT 
+        CASE 
+            WHEN EXISTS (
+                SELECT * 
+                FROM bookings 
+                WHERE booking_date = booking_date 
+                AND table_number = table_number
+            )
+            THEN 'Booked'
+            ELSE 'Available'
+        END INTO table_status;
+
+    -- If the table is already booked, rollback the transaction
+    IF table_status = 'Booked' THEN
+        ROLLBACK;
+        SELECT 'Table is already booked' AS Message;
+    ELSE
+        -- Otherwise, insert the new booking record
+        INSERT INTO bookings (booking_date, table_number, customer_id)
+        VALUES (booking_date, table_number, customer_id);
+
+        -- Commit the transaction
+        COMMIT;
+        SELECT 'Booking added successfully' AS Message;
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `CheckBooking`$$
+CREATE DEFINER=`meta`@`%` PROCEDURE `CheckBooking` (IN `booking_date` DATE, IN `table_number` INT)   BEGIN
+    DECLARE table_status VARCHAR(50);
+
+    -- Check if the table is booked on the given date
+    SELECT 
+        CASE 
+            WHEN EXISTS (
+                SELECT * 
+                FROM bookings 
+                WHERE booking_date = booking_date 
+                AND table_number = table_number
+            )
+            THEN 'Booked'
+            ELSE 'Available'
+        END INTO table_status;
+
+    -- Return the status of the table
+    SELECT table_status AS TableStatus;
 END$$
 
 DROP PROCEDURE IF EXISTS `GetMaxQuantity`$$
@@ -37,6 +88,33 @@ CREATE DEFINER=`meta`@`%` PROCEDURE `GetMaxQuantity` ()   BEGIN
 END$$
 
 DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bookings`
+--
+
+DROP TABLE IF EXISTS `bookings`;
+CREATE TABLE IF NOT EXISTS `bookings` (
+  `booking_id` int NOT NULL AUTO_INCREMENT,
+  `table_number` int DEFAULT NULL,
+  `booking_date` date DEFAULT NULL,
+  `customer_id` int DEFAULT NULL,
+  PRIMARY KEY (`booking_id`),
+  UNIQUE KEY `booking_id_UNIQUE` (`booking_id`),
+  KEY `booking_id_fk_idx` (`customer_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `bookings`
+--
+
+INSERT INTO `bookings` (`booking_id`, `table_number`, `booking_date`, `customer_id`) VALUES
+(1, 5, '2022-10-10', 1),
+(2, 3, '2022-11-12', 3),
+(3, 2, '2022-10-11', 2),
+(4, 2, '2022-10-13', 1);
 
 -- --------------------------------------------------------
 
@@ -164,6 +242,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
 --
 
 INSERT INTO `orders` (`orders_id`, `menu_id`, `customer_id`, `quantity`, `total_cost`) VALUES
+(1, 1, 1, 3, 200),
 (2, 1, 2, 5, 250),
 (3, 2, 3, 1, 150),
 (4, 1, 1, 2, 140),
@@ -216,6 +295,12 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`meta`@`%` SQL SECURITY DEFINER VIEW `ordersv
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `bookings`
+--
+ALTER TABLE `bookings`
+  ADD CONSTRAINT `booking_id_fk` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `menus`
