@@ -1,13 +1,6 @@
--- Ensure you're using the correct database
-USE little_lemon_db;
-
--- Create the stored procedure
-DELIMITER //
-CREATE PROCEDURE CancelOrder(IN order_id INT)
-BEGIN
-    DELETE FROM orders WHERE orders_id = order_id;
-END //
-DELIMITER ;
-
--- Call the stored procedure with a specific order ID
-CALL CancelOrder(1);
+INSERT INTO bookings (booking_date, table_number, customer_id)
+VALUES 
+('2022-10-10', 5, 1),
+('2022-11-12', 3, 3),
+('2022-10-11', 2, 2),
+('2022-10-13', 2, 1);
