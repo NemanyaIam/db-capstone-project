@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jul 07, 2024 at 12:42 PM
+-- Generation Time: Jul 07, 2024 at 04:08 PM
 -- Server version: 8.3.0
 -- PHP Version: 8.2.18
 
@@ -20,6 +20,23 @@ SET time_zone = "+00:00";
 --
 -- Database: `little_lemon_db`
 --
+
+DELIMITER $$
+--
+-- Procedures
+--
+DROP PROCEDURE IF EXISTS `CancelOrder`$$
+CREATE DEFINER=`meta`@`%` PROCEDURE `CancelOrder` (IN `order_id` INT)   BEGIN
+    DELETE FROM orders WHERE orders_id = order_id;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetMaxQuantity`$$
+CREATE DEFINER=`meta`@`%` PROCEDURE `GetMaxQuantity` ()   BEGIN
+    SELECT MAX(quantity) AS MaxQuantity
+    FROM orders;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -147,7 +164,6 @@ CREATE TABLE IF NOT EXISTS `orders` (
 --
 
 INSERT INTO `orders` (`orders_id`, `menu_id`, `customer_id`, `quantity`, `total_cost`) VALUES
-(1, 1, 1, 3, 200),
 (2, 1, 2, 5, 250),
 (3, 2, 3, 1, 150),
 (4, 1, 1, 2, 140),
