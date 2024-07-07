@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jul 07, 2024 at 04:50 PM
+-- Generation Time: Jul 07, 2024 at 05:05 PM
 -- Server version: 8.3.0
 -- PHP Version: 8.2.18
 
@@ -25,6 +25,14 @@ DELIMITER $$
 --
 -- Procedures
 --
+DROP PROCEDURE IF EXISTS `AddBooking`$$
+CREATE DEFINER=`meta`@`%` PROCEDURE `AddBooking` (IN `table_number` INT, IN `booking_date` DATE, IN `customer_id` INT)   BEGIN
+    INSERT INTO bookings (table_number, booking_date, customer_id)
+    VALUES (table_number, booking_date, customer_id);
+    
+    SELECT 'Booking added successfully' AS Message;
+END$$
+
 DROP PROCEDURE IF EXISTS `AddValidBooking`$$
 CREATE DEFINER=`meta`@`%` PROCEDURE `AddValidBooking` (IN `booking_date` DATE, IN `table_number` INT, IN `customer_id` INT)   BEGIN
     DECLARE table_status VARCHAR(50);
@@ -60,6 +68,27 @@ CREATE DEFINER=`meta`@`%` PROCEDURE `AddValidBooking` (IN `booking_date` DATE, I
     END IF;
 END$$
 
+DROP PROCEDURE IF EXISTS `CancelBooking`$$
+CREATE DEFINER=`meta`@`%` PROCEDURE `CancelBooking` (IN `booking_id` INT)   BEGIN
+    DECLARE booking_exists INT;
+    
+    -- Check if the booking_id exists
+    SELECT COUNT(*) INTO booking_exists
+    FROM bookings
+    WHERE booking_id = booking_id;
+    
+    -- If booking exists, delete it
+    IF booking_exists > 0 THEN
+        DELETE FROM bookings
+        WHERE booking_id = booking_id;
+        
+        SELECT CONCAT('Booking with ID ', booking_id, ' has been successfully cancelled.') AS Message;
+    ELSE
+        SELECT 'Booking ID does not exist.' AS Message;
+    END IF;
+    
+END$$
+
 DROP PROCEDURE IF EXISTS `CheckBooking`$$
 CREATE DEFINER=`meta`@`%` PROCEDURE `CheckBooking` (IN `booking_date` DATE, IN `table_number` INT)   BEGIN
     DECLARE table_status VARCHAR(50);
@@ -87,6 +116,15 @@ CREATE DEFINER=`meta`@`%` PROCEDURE `GetMaxQuantity` ()   BEGIN
     FROM orders;
 END$$
 
+DROP PROCEDURE IF EXISTS `UpdateBooking`$$
+CREATE DEFINER=`meta`@`%` PROCEDURE `UpdateBooking` (IN `booking_id` INT, IN `new_booking_date` DATE)   BEGIN
+    UPDATE bookings
+    SET booking_date = new_booking_date
+    WHERE booking_id = booking_id;
+    
+    SELECT 'Booking updated successfully' AS Message;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -104,17 +142,7 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   PRIMARY KEY (`booking_id`),
   UNIQUE KEY `booking_id_UNIQUE` (`booking_id`),
   KEY `booking_id_fk_idx` (`customer_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
-
---
--- Dumping data for table `bookings`
---
-
-INSERT INTO `bookings` (`booking_id`, `table_number`, `booking_date`, `customer_id`) VALUES
-(1, 5, '2022-10-10', 1),
-(2, 3, '2022-11-12', 3),
-(3, 2, '2022-10-11', 2),
-(4, 2, '2022-10-13', 1);
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
 
